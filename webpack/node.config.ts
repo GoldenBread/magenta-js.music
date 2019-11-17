@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as nodeExternals from 'webpack-node-externals';
-import {baseConfig} from './es6.base.config';
+import { baseConfig } from './es6.base.config';
 
 module.exports = {
   ...baseConfig,
@@ -12,7 +12,7 @@ module.exports = {
         loader: 'ts-loader',
         options: {
           configFile: 'tsconfig.es6.json',
-          compilerOptions: {outDir: './node'}
+          compilerOptions: { outDir: './node' }
         }
       }
     }],
@@ -24,6 +24,9 @@ module.exports = {
     libraryTarget: 'umd',
     path: path.resolve(__dirname, '../node'),
     globalObject: 'global'
+  },
+  optimization: {
+    minimize: false
   },
   // If bundling for Node/Webpack usage, don't bundle node_modules.
   externals: nodeExternals(),

@@ -23,10 +23,15 @@
  */
 import * as midiconvert from 'midiconvert';
 
-import {INoteSequence, NoteSequence} from '../protobuf/index';
+import { INoteSequence, NoteSequence } from '../protobuf/index';
 
 import * as constants from './constants';
 import * as sequences from './sequences';
+
+const FileAPI = require('file-api')
+  , File = FileAPI.File
+  , FileReader = FileAPI.FileReader;
+
 
 export class MidiConversionError extends Error {
   constructor(message?: string) {
@@ -67,7 +72,7 @@ export function midiToSequenceProto(midi: string): NoteSequence {
   // TODO(fjord): When MidiConvert supports multiple tempos, update
   // accordingly.
   ns.tempos.push(
-      NoteSequence.Tempo.create({time: 0, qpm: parsedMidi.header.bpm}));
+    NoteSequence.Tempo.create({ time: 0, qpm: parsedMidi.header.bpm }));
 
   // We want a unique instrument number for each combination of track and
   // program number.
@@ -123,28 +128,28 @@ export function sequenceProtoToMidi(ns: INoteSequence) {
   const isZeroOrUndefined = (t: number) => (t === 0 || t === undefined);
 
   if (!ns.tempos || ns.tempos.length === 0) {
-    ns.tempos = [{time: 0, qpm: constants.DEFAULT_QUARTERS_PER_MINUTE}];
+    ns.tempos = [{ time: 0, qpm: constants.DEFAULT_QUARTERS_PER_MINUTE }];
   }
   if (!ns.timeSignatures || ns.timeSignatures.length === 0) {
-    ns.timeSignatures = [{time: 0, numerator: 4, denominator: 4}];
+    ns.timeSignatures = [{ time: 0, numerator: 4, denominator: 4 }];
   }
 
   if (ns.tempos.length !== 1 || !isZeroOrUndefined(ns.tempos[0].time)) {
     throw new MidiConversionError(
-        'NoteSequence must have exactly 1 tempo at time 0');
+      'NoteSequence must have exactly 1 tempo at time 0');
   }
   if (ns.timeSignatures.length !== 1 ||
-      !isZeroOrUndefined(ns.timeSignatures[0].time)) {
+    !isZeroOrUndefined(ns.timeSignatures[0].time)) {
     throw new MidiConversionError(
-        'NoteSequence must have exactly 1 time signature at time 0');
+      'NoteSequence must have exactly 1 time signature at time 0');
   }
   const json = {
     header: {
       bpm: ns.tempos[0].qpm,
       PPQ: ns.ticksPerQuarter ? ns.ticksPerQuarter :
-                                constants.DEFAULT_TICKS_PER_QUARTER,
+        constants.DEFAULT_TICKS_PER_QUARTER,
       timeSignature:
-          [ns.timeSignatures[0].numerator, ns.timeSignatures[0].denominator]
+        [ns.timeSignatures[0].numerator, ns.timeSignatures[0].denominator]
     },
     tracks: [] as Array<{}>
   };
@@ -161,7 +166,7 @@ export function sequenceProtoToMidi(ns: INoteSequence) {
   for (let i = 0; i < instruments.length; i++) {
     if (i !== instruments[i]) {
       throw new MidiConversionError(
-          'Instrument list must be continuous and start at 0');
+        'Instrument list must be continuous and start at 0');
     }
 
     const notes = tracks.get(i);
@@ -170,16 +175,16 @@ export function sequenceProtoToMidi(ns: INoteSequence) {
       notes: [] as Array<{}>,
       isPercussion: (notes[0].isDrum === undefined) ? false : notes[0].isDrum,
       channelNumber: notes[0].isDrum ? constants.DRUM_CHANNEL :
-                                       constants.DEFAULT_CHANNEL,
+        constants.DEFAULT_CHANNEL,
       instrumentNumber: (notes[0].program === undefined) ?
-          constants.DEFAULT_PROGRAM :
-          notes[0].program
+        constants.DEFAULT_PROGRAM :
+        notes[0].program
     };
 
     track.notes = notes.map(note => {
       const velocity = (note.velocity === undefined) ?
-          constants.DEFAULT_VELOCITY :
-          note.velocity;
+        constants.DEFAULT_VELOCITY :
+        note.velocity;
       return {
         midi: note.pitch,
         time: note.startTime,
@@ -203,13 +208,13 @@ export function sequenceProtoToMidi(ns: INoteSequence) {
 export function urlToBlob(url: string): Promise<Blob> {
   return new Promise((resolve, reject) => {
     fetch(url)
-        .then((response) => {
-          return response.blob();
-        })
-        .then((blob) => {
-          resolve(blob);
-        })
-        .catch((error) => reject(error));
+      .then((response) => {
+        return response.blob();
+      })
+      .then((blob) => {
+        resolve(blob);
+      })
+      .catch((error) => reject(error));
   });
 }
 
@@ -222,7 +227,7 @@ export function urlToBlob(url: string): Promise<Blob> {
 export function blobToNoteSequence(blob: Blob): Promise<NoteSequence> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (e: any) => {
       try {
         const ns = midiToSequenceProto(reader.result as string);
         resolve(ns);
@@ -230,7 +235,7 @@ export function blobToNoteSequence(blob: Blob): Promise<NoteSequence> {
         reject(error);
       }
     };
-    reader.onerror = (e) => reject(e);
+    reader.onerror = (e: any) => reject(e);
     reader.readAsBinaryString(blob);
   });
 }
@@ -242,5 +247,18 @@ export function blobToNoteSequence(blob: Blob): Promise<NoteSequence> {
  * @returns a new `NoteSequence`
  */
 export function urlToNoteSequence(url: string): Promise<NoteSequence> {
-  return urlToBlob(url).then(blobToNoteSequence);
+  //return urlToBlob(url).then(blobToNoteSequence);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const ns = midiToSequenceProto(reader.result as string);
+        resolve(ns);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = (e: any) => reject(e);
+    reader.readAsDataURL(new File(url));
+  });
 }
