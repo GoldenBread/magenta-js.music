@@ -36,7 +36,7 @@
     "file-saver-typescript": "^1.0.1",
     "http-server": "^0.11.1",
     "in-publish": "^2.0.0",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.3",
     "node-fetch": "https://github.com/GoldenBread/node-fetch/releases/download/v2.6.0_headless/node-fetch-2.6.0.tgz",
     "tape": "^4.9.0",
     "terser-webpack-plugin": "^1.4.1",
