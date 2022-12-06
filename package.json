@@ -34,7 +34,7 @@
     "d3": "^5.8.0",
     "file-saver": "^1.3.8",
     "file-saver-typescript": "^1.0.1",
-    "http-server": "^0.11.1",
+    "http-server": "^0.11.2",
     "in-publish": "^2.0.0",
     "minimist": "^1.2.0",
     "node-fetch": "https://github.com/GoldenBread/node-fetch/releases/download/v2.6.0_headless/node-fetch-2.6.0.tgz",
